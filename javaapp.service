@@ -1,0 +1,16 @@
+[Unit]
+Description=Spring Boot Application
+After=syslog.target
+
+[Service]
+
+ExecStart=/usr/bin/java -jar /home/ubuntu/helloworld-1.0-SNAPSHOT.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=30
+SyslogIdentifier=java-app
+
+[Install]
+WantedBy=multi-user.target
+
+
