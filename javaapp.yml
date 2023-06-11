@@ -1,0 +1,35 @@
+- hosts : all
+  become: true
+  vars:
+    - jar_src_path: ./helloworld/target/helloworld-1.0-SNAPSHOT.jar
+    - jar_dest_path: /home/ubuntu/
+    - svc_src_path: ./helloworld/javaapp.service
+    - svc_dest_path: /etc/systemd/system/ 
+  tasks:
+    - name: Update APT package manager repositories cache
+      apt:
+        update_cache: yes
+    - name: install java and maven
+      apt:
+        name: "{{ item }}"
+        state: present
+
+      with_items:
+        - default-jdk
+        - maven
+
+    - name: copy jar file
+      copy:
+        src: "{{ jar_src_path }}"
+        dest: "{{ jar_dest_path }}"
+        
+    - name: copy service file
+      copy:
+        src: "{{ svc_src_path }}"
+        dest: "{{ svc_dest_path }}"
+
+    - name: start a javapp service
+      systemd:
+        name: javaapp
+        state: started
+
