@@ -1,0 +1,5 @@
+all:
+  hosts:
+    snehal:
+      ansible_host: ec2-65-2-38-246.ap-south-1.compute.amazonaws.com
+    

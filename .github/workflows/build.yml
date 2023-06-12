@@ -40,4 +40,10 @@ jobs:
         mkdir ~/.ssh
         echo "$EC2_SSH_KEY" >  ~/.ssh/ec2
         chmod 600  ~/.ssh/ec2
-
+ 
+    - name: run playbook
+      env:
+        ANSIBLE_FORCE_COLOR: '1'
+      run: |
+        ansible all -m ping
+      working-directory: ./deployment
