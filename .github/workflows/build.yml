@@ -14,7 +14,7 @@ jobs:
     - name: Build with Maven
       run: mvn clean package
     - name: copy jar to diff folder
-      run: mkdir jardir && co target/*.jar jardir
+      run: mkdir jardir && cp target/*.jar jardir
     - uses: actions/upload-artifact@v3
       with:
         name: Package
