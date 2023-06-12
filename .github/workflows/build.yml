@@ -29,4 +29,15 @@ jobs:
       with:
        name: Package
        path: jardir
+    - name: Install dependencies
+      run: |
+        sudo apt install ansible-core
+    
+    - name: set ansible config secrets
+      env:
+        EC2_SSH_KEY: ${{ secrets.JAVA_APP_SSH_KEY }}
+      run: |
+        mkdir ~/.ssh
+        echo "$EC2_SSH_KEY" >  ~/.ssh/ec2
+        chmod 600  ~/.ssh/ec2
 
