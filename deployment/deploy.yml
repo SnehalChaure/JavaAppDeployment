@@ -1,9 +1,9 @@
 - hosts : all
   become: true
   vars:
-    - jar_src_path: ./helloworld/target/helloworld-1.0-SNAPSHOT.jar
+    - jar_src_path: ../jardir/helloworld-1.0-SNAPSHOT.jar
     - jar_dest_path: /home/ubuntu/
-    - svc_src_path: ./helloworld/javaapp.service
+    - svc_src_path:  javaapp.service
     - svc_dest_path: /etc/systemd/system/ 
   tasks:
     - name: Update APT package manager repositories cache
