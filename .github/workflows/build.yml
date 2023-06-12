@@ -13,3 +13,20 @@ jobs:
        cache: maven
     - name: Build with Maven
       run: mvn clean package
+    - name: copy jar to diff folder
+      run: mkdir jardir && co target/*.jar jardir
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Package
+        path: jardir
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps: 
+    - uses: actions/checkout@v3
+    - uses: actions/download-artifact@master
+      with:
+       name: Package
+       path: jardir
+
