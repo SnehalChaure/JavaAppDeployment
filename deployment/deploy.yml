@@ -1,8 +1,8 @@
 - hosts : all
   become: true
   vars:
-    - jar_src_path: ../jardir/helloworld-1.0-SNAPSHOT.jar
-    - jar_dest_path: /home/ubuntu/
+    - jar_src_path: helloworld-1.0-SNAPSHOT.jar
+    - jar_dest_path: /opt/myapp/
     - svc_src_path:  javaapp.service
     - svc_dest_path: /etc/systemd/system/ 
   tasks:
@@ -18,10 +18,19 @@
         - default-jdk
         - maven
 
+    - name: Create directory
+      file:
+        path: /opt/myapp
+        state: directory
+
+    - name: Generate timestamp
+      command: date '+%Y-%m-%d_%H-%M-%S'
+      register: timestamp
+
     - name: copy jar file
       copy:
         src: "{{ jar_src_path }}"
-        dest: "{{ jar_dest_path }}"
+        dest: "{{ jar_dest_path }}/helloworld-1.0-SNAPSHOT_{{ timestamp.stdout }}.jar"
         
     - name: copy service file
       copy:
@@ -31,5 +40,5 @@
     - name: start a javapp service
       systemd:
         name: javaapp
-        state: started
+        state: restarted
 
