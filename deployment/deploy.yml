@@ -1,44 +1,68 @@
 - hosts : all
   become: true
   vars:
-    - jar_src_path: helloworld-1.0-SNAPSHOT.jar
-    - jar_dest_path: /opt/myapp/
-    - svc_src_path:  javaapp.service
-    - svc_dest_path: /etc/systemd/system/ 
+    service_file_path: myapp.service.j2
+    service_dest_path: "/etc/systemd/system/myapp.service"
+    jar_dest_path: "/opt/myapp/{{date_time}}/helloworld-1.0-SNAPSHOT.jar"
+    jar_src_path: "../jardir/helloworld-1.0-SNAPSHOT.jar"
   tasks:
-    - name: Update APT package manager repositories cache
-      apt:
-        update_cache: yes
-    - name: install java and maven
-      apt:
-        name: "{{ item }}"
-        state: present
+  - set_fact:
+     date_time: "{{ansible_date_time.date}}-{{ansible_date_time.hour}}-{{ansible_date_time.minute}}"
 
-      with_items:
-        - default-jdk
-        - maven
+  - name: Creates directory
+    file:
+     path: "{{item}}"
+     state: directory
+    loop:
+     - "/opt/myapp/{{date_time}}"
 
-    - name: Create directory
-      file:
-        path: /opt/myapp
-        state: directory
+  - name: read current.txt
+    shell: "cat /opt/myapp/current.txt"
+    register: current_version
+    ignore_errors: true
 
-    - name: Generate timestamp
-      command: date '+%Y-%m-%d_%H-%M-%S'
-      register: timestamp
+  - name: get the checksum of local jar
+    stat:
+       path: "{{ jar_src_path }}"
+       checksum_algorithm: sha1
+    delegate_to: localhost
+    register: local_jar
 
-    - name: copy jar file
-      copy:
-        src: "{{ jar_src_path }}"
-        dest: "{{ jar_dest_path }}/helloworld-1.0-SNAPSHOT_{{ timestamp.stdout }}.jar"
-        
-    - name: copy service file
-      copy:
-        src: "{{ svc_src_path }}"
-        dest: "{{ svc_dest_path }}"
+  - name: get the checksum of deployed jar
+    stat:
+      path: "{{ current_version.stdout }}"
+      checksum_algorithm: sha1
+    register: remote_jar
 
-    - name: start a javapp service
-      systemd:
-        name: javaapp
-        state: restarted
+  - name: copy jar file
+    copy:
+     src: "{{ jar_src_path }}"
+     dest: "{{ jar_dest_path }}"
+    when:
+     - current_version.rc != 0 or local_jar.stat.checksum != remote_jar.stat.checksum
+    register: copy_jar
+
+  - name: print debug info
+    debug:
+       msg: "Same Jar Already Deployed On The Server :=>{{ current_version.stdout}} "
+    when: copy_jar.changed == false
+
+  - name: store the jar file path in current.txt
+    copy:
+      dest: /opt/myapp/current.txt
+      content: "{{ jar_dest_path }}"
+    when: copy_jar.changed
+
+  - name: create/update service file on host machine
+    template:
+      src: "{{service_file_path}}"
+      dest: "{{ service_dest_path }}"
+    when: copy_jar.changed
+
+  - name: start a javapp service
+    systemd:
+      name: myapp
+      state: restarted
+      daemon_reload: true
+    when: copy_jar.changed
 
