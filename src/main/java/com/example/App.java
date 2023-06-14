@@ -18,6 +18,6 @@ class HelloWorldController {
 
     @GetMapping("/")
     public String helloWorld() {
-        return "Hello world!! This is java app v2";
+        return "Hello world!! This is java app v3";
     }       
 }
