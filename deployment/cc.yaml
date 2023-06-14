@@ -1,0 +1,33 @@
+- hosts : localhost
+  become: true
+  vars:
+    service_file_path: myapp.service.j2
+    service_dest_path: "/etc/systemd/system/myapp.service"
+    jar_dest_path: "/opt/myapp/{{date_time}}/helloworld-1.0-SNAPSHOT.jar"
+    jar_src_path: "../jardir/helloworld-1.0-SNAPSHOT.jar"
+  tasks:
+  - set_fact:
+     date_time: "{{ansible_date_time.date}}-{{ansible_date_time.hour}}-{{ansible_date_time.minute}}"
+
+  - name: Creates directory
+    file:
+     path: "{{item}}" 
+     state: directory
+    loop:
+     - "/opt/myapp/{{date_time}}" 
+
+  - name: copy jar file
+    copy:
+     src: "{{ jar_src_path }}"
+     dest: "{{ jar_dest_path }}"
+
+  - name: create/update service file on host machine
+    template: 
+      src: "{{service_file_path}}"
+      dest: "{{ service_dest_path }}"
+
+  - name: start a javapp service
+    systemd:
+      name: myapp
+      state: restarted
+      daemon_reload: true
